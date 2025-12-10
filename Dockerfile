@@ -41,8 +41,11 @@ RUN composer install --optimize-autoloader --no-dev --no-interaction
 # Install Node dependencies and build
 RUN npm ci && npm run build
 
+# Create storage link for public files (images, uploads)
+RUN php artisan storage:link
+
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/storage
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Configure Apache
