@@ -1,0 +1,72 @@
+name: Deploy to Oracle Cloud
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, curl, zip, gd, bcmath, pdo_mysql
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Composer dependencies
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
+      - name: Install NPM dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Deploy to Oracle Cloud
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USERNAME }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          script: |
+            cd /var/www/arisan
+            
+            # Pull latest code
+            git pull origin main
+            
+            # Install PHP dependencies
+            composer install --no-dev --optimize-autoloader --no-interaction
+            
+            # Install and build frontend
+            npm ci
+            npm run build
+            
+            # Run migrations
+            php artisan migrate --force
+            
+            # Clear and cache config
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+            
+            # Set permissions
+            sudo chown -R www-data:www-data storage bootstrap/cache
+            sudo chmod -R 775 storage bootstrap/cache
+            
+            # Restart PHP-FPM
+            sudo systemctl reload php8.2-fpm
+            
+            echo "✅ Deployment complete!"
+

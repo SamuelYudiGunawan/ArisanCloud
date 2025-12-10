@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
-import { home } from '@/routes';
-import { Link, usePage } from '@inertiajs/vue3';
-
-const page = usePage();
-const name = page.props.name;
-const quote = page.props.quote;
+import { Users } from 'lucide-vue-next';
 
 defineProps<{
     title?: string;
@@ -14,41 +8,41 @@ defineProps<{
 </script>
 
 <template>
-    <div
-        class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0"
-    >
-        <div
-            class="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r"
-        >
-            <div class="absolute inset-0 bg-zinc-900" />
-            <Link
-                :href="home()"
-                class="relative z-20 flex items-center text-lg font-medium"
-            >
-                <AppLogoIcon class="mr-2 size-8 fill-current text-white" />
-                {{ name }}
-            </Link>
-            <div v-if="quote" class="relative z-20 mt-auto">
-                <blockquote class="space-y-2">
-                    <p class="text-lg">&ldquo;{{ quote.message }}&rdquo;</p>
-                    <footer class="text-sm text-neutral-300">
-                        {{ quote.author }}
-                    </footer>
-                </blockquote>
+    <div class="flex min-h-svh">
+        <!-- Left Panel - Blue Branding -->
+        <div class="hidden lg:flex lg:w-1/2 bg-[#1e3a5f] flex-col items-center justify-center p-12">
+            <div class="text-center text-white">
+                <!-- Logo -->
+                <div class="flex items-center justify-center gap-4 mb-6">
+                    <div class="bg-white rounded-xl p-3">
+                        <Users class="w-10 h-10 text-[#1e3a5f]" />
+                    </div>
+                    <h1 class="text-4xl font-bold">Arisan</h1>
+                </div>
+                <p class="text-lg text-blue-200">
+                    Kelola Arisan dengan Transparan & Modern
+                </p>
             </div>
         </div>
-        <div class="lg:p-8">
-            <div
-                class="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]"
-            >
-                <div class="flex flex-col space-y-2 text-center">
-                    <h1 class="text-xl font-medium tracking-tight" v-if="title">
-                        {{ title }}
-                    </h1>
-                    <p class="text-sm text-muted-foreground" v-if="description">
-                        {{ description }}
-                    </p>
+
+        <!-- Right Panel - White Form -->
+        <div class="flex-1 flex flex-col items-center justify-center p-6 md:p-12 bg-gray-100">
+            <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+                <!-- Mobile Logo -->
+                <div class="lg:hidden flex items-center justify-center gap-3 mb-8">
+                    <div class="bg-[#1e3a5f] rounded-xl p-2">
+                        <Users class="w-6 h-6 text-white" />
+                    </div>
+                    <h1 class="text-2xl font-bold text-[#1e3a5f]">Arisan</h1>
                 </div>
+
+                <!-- Title -->
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl font-bold text-gray-900">{{ title }}</h2>
+                    <p v-if="description" class="text-gray-500 mt-2">{{ description }}</p>
+                </div>
+
+                <!-- Form Slot -->
                 <slot />
             </div>
         </div>

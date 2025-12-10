@@ -19,16 +19,17 @@ const page = usePage();
 
 <template>
     <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel>Platform</SidebarGroupLabel>
+        <SidebarGroupLabel class="text-blue-200">Menu</SidebarGroupLabel>
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <SidebarMenuButton
                     as-child
                     :is-active="urlIsActive(item.href, page.url)"
                     :tooltip="item.title"
+                    class="text-white hover:bg-[#2d5a87] data-[active=true]:bg-[#2d5a87]"
                 >
-                    <Link :href="item.href">
-                        <component :is="item.icon" />
+                    <Link :href="item.href" class="text-white">
+                        <component :is="item.icon" class="text-white" />
                         <span>{{ item.title }}</span>
                     </Link>
                 </SidebarMenuButton>
