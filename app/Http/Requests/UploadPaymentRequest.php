@@ -47,7 +47,8 @@ class UploadPaymentRequest extends FormRequest
                 ->where('user_id', $this->user()->id)
                 ->first();
 
-            if ($existingPayment) {
+            // Only block if payment exists AND is not rejected (rejected payments can be re-uploaded)
+            if ($existingPayment && $existingPayment->status !== 'rejected') {
                 $validator->errors()->add('payment', 'Anda sudah melakukan pembayaran untuk periode ini. Status: ' . $existingPayment->status);
             }
         });
