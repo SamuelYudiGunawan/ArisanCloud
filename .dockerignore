@@ -1,0 +1,16 @@
+node_modules
+vendor
+.git
+.gitignore
+.env
+.env.example
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+bootstrap/cache/*
+.github
+tests
+phpunit.xml
+README.md
+
