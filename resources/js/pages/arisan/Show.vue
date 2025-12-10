@@ -205,6 +205,20 @@ const userPaidThisPeriod = computed(() => {
     );
 });
 
+const userPaymentRejected = computed(() => {
+    const payment = props.userPayments.find(p => 
+        p.period_id === props.group.active_period?.id && 
+        p.status === 'rejected'
+    );
+    return payment || null;
+});
+
+const canUploadPayment = computed(() => {
+    if (!props.group.active_period) return false;
+    // Can upload if not paid OR if previous payment was rejected
+    return !userPaidThisPeriod.value;
+});
+
 const userPaidCount = computed(() => props.userPayments.filter(p => p.status === 'approved').length);
 
 // Invite member form
@@ -351,8 +365,24 @@ const rejectFromDialog = () => {
                             </Button>
                         </div>
 
+                        <!-- Rejected Payment Warning -->
+                        <div v-if="userPaymentRejected" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                            <div class="flex items-start gap-3">
+                                <XCircle class="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <h4 class="font-semibold text-red-700">Pembayaran Ditolak</h4>
+                                    <p class="text-sm text-red-600 mt-1">
+                                        Pembayaran Anda sebelumnya telah ditolak. Silakan upload bukti pembayaran yang baru.
+                                    </p>
+                                    <p v-if="userPaymentRejected.notes" class="text-sm text-red-600 mt-2">
+                                        <span class="font-medium">Catatan:</span> {{ userPaymentRejected.notes }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Payment Instructions & Upload -->
-                        <div v-if="group.active_period && !userPaidThisPeriod" class="grid md:grid-cols-2 gap-6">
+                        <div v-if="group.active_period && canUploadPayment" class="grid md:grid-cols-2 gap-6">
                             <div class="space-y-4">
                                 <h4 class="font-semibold">Cara Pembayaran</h4>
                                 <div class="space-y-3">
@@ -430,7 +460,11 @@ const rejectFromDialog = () => {
                         <div v-else-if="group.active_period && userPaidThisPeriod" class="text-center py-8 bg-green-50 rounded-lg">
                             <CheckCircle class="w-16 h-16 mx-auto text-green-500 mb-4" />
                             <h3 class="text-xl font-semibold text-green-700">Pembayaran Terkirim!</h3>
-                            <p class="text-gray-600">Menunggu verifikasi dari penyelenggara arisan.</p>
+                            <p class="text-gray-600">
+                                {{ props.userPayments.find(p => p.period_id === group.active_period?.id)?.status === 'approved' 
+                                    ? 'Pembayaran Anda telah diverifikasi.' 
+                                    : 'Menunggu verifikasi dari penyelenggara arisan.' }}
+                            </p>
                         </div>
                     </div>
 

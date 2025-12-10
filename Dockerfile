@@ -41,12 +41,17 @@ RUN composer install --optimize-autoloader --no-dev --no-interaction
 # Install Node dependencies and build
 RUN npm ci && npm run build
 
-# Create storage link for public files (images, uploads)
-RUN php artisan storage:link
+# Create storage directories
+RUN mkdir -p /var/www/html/storage/app/public/payment-proofs \
+    && mkdir -p /var/www/html/storage/framework/cache \
+    && mkdir -p /var/www/html/storage/framework/sessions \
+    && mkdir -p /var/www/html/storage/framework/views \
+    && mkdir -p /var/www/html/storage/logs \
+    && mkdir -p /var/www/html/bootstrap/cache
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public/storage
-RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+# Set permissions - make storage fully writable
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Configure Apache
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
@@ -54,6 +59,6 @@ RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available
 # Expose port
 EXPOSE 80
 
-# Start command
-CMD php artisan migrate --force && apache2-foreground
+# Start command - create storage link, run migrations, then start Apache
+CMD php artisan storage:link --force && php artisan migrate --force && apache2-foreground
 
