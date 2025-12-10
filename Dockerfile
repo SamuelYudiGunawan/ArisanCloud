@@ -23,6 +23,9 @@ RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 
+# Suppress Apache ServerName warning
+RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
