@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import type { GroupDetail, MemberPaymentStatus, DrawHistory, Payment } from '@/types/arisan';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { ChevronLeft, Upload, Users, Wallet, Trophy, Info, DollarSign, CheckCircle, Clock, XCircle, UserPlus, Trash2, AlertCircle, X } from 'lucide-vue-next';
+import { ChevronLeft, Upload, Users, Wallet, Trophy, Info, DollarSign, CheckCircle, Clock, XCircle, UserPlus, Trash2, AlertCircle, X, LogOut } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 
 const props = defineProps<{
@@ -243,14 +243,15 @@ const removeMember = (userId: number) => {
     }
 };
 
-// Check if can manage members (no active period AND arisan complete or not started)
+const leaveGroup = () => {
+    if (confirm('Apakah Anda yakin ingin keluar dari grup ini?')) {
+        router.post(`/arisan/${props.group.id}/leave`);
+    }
+};
+
+// Creator can always manage members (invite/remove)
 const canManageMembers = computed(() => {
-    const isCreator = props.group.is_creator;
-    const noActivePeriod = !props.group.active_period;
-    const arisanNotStarted = props.group.draw_history.length === 0;
-    const arisanComplete = props.group.is_complete;
-    
-    return isCreator && noActivePeriod && (arisanNotStarted || arisanComplete);
+    return props.group.is_creator;
 });
 
 // Payment proof dialog
@@ -589,14 +590,14 @@ const rejectFromDialog = () => {
                             </Card>
                         </div>
 
-                        <!-- Invite Member Section (only when no active period) -->
+                        <!-- Invite Member Section (Creator only) -->
                         <div v-if="canManageMembers" class="bg-blue-50 p-4 rounded-lg border border-blue-200">
                             <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                                 <UserPlus class="w-5 h-5 text-blue-600" />
                                 Tambah Anggota Baru
                             </h4>
                             <p class="text-sm text-gray-600 mb-3">
-                                Anda dapat menambah atau menghapus anggota karena tidak ada periode aktif.
+                                Masukkan email user yang sudah terdaftar untuk mengundang ke grup.
                             </p>
                             <form @submit.prevent="submitInvite" class="flex gap-2">
                                 <Input
@@ -688,14 +689,26 @@ const rejectFromDialog = () => {
                                             {{ member.payment_date || '-' }}
                                         </td>
                                         <td v-if="group.is_creator" class="px-4 py-3">
-                                            <Button 
-                                                v-if="member.status === 'pending'"
-                                                size="sm" 
-                                                class="bg-blue-500 hover:bg-blue-600 text-white"
-                                                @click="openProofDialog(member)"
-                                            >
-                                                Lihat Bukti
-                                            </Button>
+                                            <div class="flex gap-2">
+                                                <Button 
+                                                    v-if="member.status === 'pending'"
+                                                    size="sm" 
+                                                    class="bg-blue-500 hover:bg-blue-600 text-white"
+                                                    @click="openProofDialog(member)"
+                                                >
+                                                    Lihat Bukti
+                                                </Button>
+                                                <Button 
+                                                    v-if="member.user_id !== group.creator.id"
+                                                    size="sm" 
+                                                    variant="destructive"
+                                                    @click="removeMember(member.user_id)"
+                                                    title="Hapus member"
+                                                >
+                                                    <Trash2 class="w-4 h-4" />
+                                                </Button>
+                                                <Badge v-if="member.user_id === group.creator.id" variant="outline" class="text-blue-600">Admin</Badge>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -737,6 +750,17 @@ const rejectFromDialog = () => {
                             >
                                 <CheckCircle class="w-4 h-4 mr-2" />
                                 Mulai Periode Arisan
+                            </Button>
+                        </div>
+
+                        <!-- Leave Group Button (for non-creator members) -->
+                        <div v-if="!group.is_creator" class="flex justify-center pt-4 border-t">
+                            <Button 
+                                variant="destructive"
+                                @click="leaveGroup"
+                            >
+                                <LogOut class="w-4 h-4 mr-2" />
+                                Keluar dari Grup
                             </Button>
                         </div>
                     </div>

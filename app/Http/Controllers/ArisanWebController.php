@@ -306,15 +306,31 @@ class ArisanWebController extends Controller
             return back()->withErrors(['error' => 'User bukan anggota grup ini.']);
         }
 
-        // Check if there's an active period
-        $activePeriod = $group->activePeriod();
-        if ($activePeriod) {
-            return back()->withErrors(['error' => 'Member hanya bisa dihapus jika tidak ada periode aktif.']);
+        $group->members()->detach($user->id);
+
+        return back()->with('success', 'Member berhasil dihapus dari grup.');
+    }
+
+    /**
+     * Leave a group (for non-creator members).
+     */
+    public function leaveGroup(Request $request, ArisanGroup $group): RedirectResponse
+    {
+        $user = $request->user();
+
+        // Creator cannot leave their own group
+        if ($group->isCreator($user)) {
+            return back()->withErrors(['error' => 'Pembuat grup tidak dapat keluar dari grup sendiri. Hapus grup jika ingin menutup arisan.']);
+        }
+
+        // Check if user is a member
+        if (!$group->isMember($user)) {
+            return back()->withErrors(['error' => 'Anda bukan anggota grup ini.']);
         }
 
         $group->members()->detach($user->id);
 
-        return back()->with('success', 'Member berhasil dihapus dari grup.');
+        return redirect()->route('arisan.index')->with('success', 'Anda berhasil keluar dari grup.');
     }
 
     /**

@@ -48,6 +48,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Member management
         Route::post('/{group}/invite', [GroupController::class, 'inviteMember']);
         Route::delete('/{group}/members/{user}', [GroupController::class, 'removeMember']);
+        Route::post('/{group}/leave', [GroupController::class, 'leaveGroup']);
 
         // Period management
         Route::post('/{group}/start-period', [DrawController::class, 'startPeriod']);

@@ -208,20 +208,42 @@ class GroupController extends Controller
             ], 404);
         }
 
-        // Check if there's an active period (can't remove during active period)
-        $activePeriod = $group->activePeriod();
-        if ($activePeriod) {
+        $group->members()->detach($user->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Member berhasil dihapus dari grup.',
+        ]);
+    }
+
+    /**
+     * Leave a group (for non-creator members).
+     */
+    public function leaveGroup(Request $request, ArisanGroup $group): JsonResponse
+    {
+        $user = $request->user();
+
+        // Creator cannot leave their own group
+        if ($group->isCreator($user)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Member hanya bisa dihapus jika tidak ada periode aktif. Selesaikan periode saat ini terlebih dahulu.',
+                'message' => 'Pembuat grup tidak dapat keluar dari grup sendiri.',
             ], 422);
+        }
+
+        // Check if user is a member
+        if (!$group->isMember($user)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda bukan anggota grup ini.',
+            ], 404);
         }
 
         $group->members()->detach($user->id);
 
         return response()->json([
             'success' => true,
-            'message' => 'Member berhasil dihapus dari grup.',
+            'message' => 'Anda berhasil keluar dari grup.',
         ]);
     }
 }

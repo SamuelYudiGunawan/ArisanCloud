@@ -35,19 +35,6 @@ class InviteMemberRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $group = $this->route('group');
-            
-            // Check if arisan cycle is complete (all members have won)
-            if (!$group->isComplete() && $group->draws()->count() > 0) {
-                $validator->errors()->add('email', 'Member hanya bisa ditambahkan jika semua member sudah pernah menang (siklus arisan selesai).');
-                return;
-            }
-
-            // Check if there's an active period (can't add members during active period)
-            $activePeriod = $group->activePeriod();
-            if ($activePeriod) {
-                $validator->errors()->add('email', 'Member hanya bisa ditambahkan jika tidak ada periode aktif.');
-                return;
-            }
 
             // Check if user is already a member
             $user = \App\Models\User::where('email', $this->email)->first();

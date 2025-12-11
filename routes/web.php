@@ -26,6 +26,7 @@ Route::middleware(['auth', 'verified'])->prefix('arisan')->name('arisan.')->grou
     // Member Management
     Route::post('/{group}/invite', [ArisanWebController::class, 'inviteMember'])->name('invite');
     Route::delete('/{group}/members/{user}', [ArisanWebController::class, 'removeMember'])->name('members.remove');
+    Route::post('/{group}/leave', [ArisanWebController::class, 'leaveGroup'])->name('leave');
     
     // Period & Payment
     Route::post('/{group}/start-period', [ArisanWebController::class, 'startPeriod'])->name('start-period');
