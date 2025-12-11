@@ -77,6 +77,7 @@ export interface DrawHistory {
     id: string;
     period_id: string;
     period_number: number | null;
+    cycle_number: number;
     winner: User;
     draw_date: string;
     total_pot_amount: number;
@@ -89,6 +90,8 @@ export interface GroupDetail extends ArisanGroup {
     draw_history: DrawHistory[];
     total_periods: number;
     total_draws: number;
+    current_cycle: number;
+    current_cycle_winners: number;
 }
 
 export type UserPaymentStatus = 'not_paid' | 'pending' | 'approved' | 'rejected';

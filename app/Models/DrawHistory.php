@@ -19,11 +19,13 @@ class DrawHistory extends Model
         'winner_user_id',
         'draw_date',
         'total_pot_amount',
+        'cycle_number',
     ];
 
     protected $casts = [
         'total_pot_amount' => 'integer',
         'draw_date' => 'datetime',
+        'cycle_number' => 'integer',
     ];
 
     /**

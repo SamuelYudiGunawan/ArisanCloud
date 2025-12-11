@@ -110,9 +110,12 @@ const performDraw = () => {
         return;
     }
 
-    // Get eligible members (those who haven't won yet)
-    const previousWinnerIds = props.group.draw_history.map(d => d.winner.id);
-    const eligibleMembers = props.group.members.filter(m => !previousWinnerIds.includes(m.id));
+    // Get eligible members (those who haven't won yet in CURRENT cycle)
+    const currentCycle = props.group.current_cycle || 1;
+    const currentCycleWinnerIds = props.group.draw_history
+        .filter(d => d.cycle_number === currentCycle)
+        .map(d => d.winner.id);
+    const eligibleMembers = props.group.members.filter(m => !currentCycleWinnerIds.includes(m.id));
     
     if (eligibleMembers.length === 0) {
         alert('Semua member sudah pernah menang!');
@@ -473,6 +476,14 @@ const rejectFromDialog = () => {
                         <h3 class="text-xl font-bold">History Pemenang</h3>
                         
                         <div v-if="group.draw_history.length > 0" class="space-y-4">
+                            <!-- Show current cycle info if more than one cycle -->
+                            <div v-if="(group.current_cycle || 1) > 1" class="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                <p class="text-sm text-blue-700">
+                                    <span class="font-semibold">Siklus {{ group.current_cycle }}</span> - 
+                                    {{ group.current_cycle_winners || 0 }} dari {{ group.member_count }} member sudah menang
+                                </p>
+                            </div>
+                            
                             <div 
                                 v-for="draw in group.draw_history" 
                                 :key="draw.id"
@@ -483,6 +494,7 @@ const rejectFromDialog = () => {
                                     <div>
                                         <p class="font-semibold text-lg text-gray-900">{{ draw.winner.name }}</p>
                                         <p class="text-sm text-gray-600">
+                                            <span v-if="(group.current_cycle || 1) > 1" class="text-blue-600">Siklus {{ draw.cycle_number }} - </span>
                                             Periode {{ draw.period_number }} - {{ formatDate(draw.draw_date) }}
                                         </p>
                                     </div>

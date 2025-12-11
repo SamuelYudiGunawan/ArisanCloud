@@ -18,6 +18,7 @@ class DrawHistoryResource extends JsonResource
             'id' => $this->id,
             'period_id' => $this->period_id,
             'period_number' => $this->period->period_number ?? null,
+            'cycle_number' => $this->cycle_number,
             'winner' => [
                 'id' => $this->winner->id,
                 'name' => $this->winner->name,

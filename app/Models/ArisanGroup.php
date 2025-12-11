@@ -22,11 +22,13 @@ class ArisanGroup extends Model
         'rekening_transfer',
         'period_duration_weeks',
         'contribution_amount',
+        'current_cycle',
     ];
 
     protected $casts = [
         'period_duration_weeks' => 'integer',
         'contribution_amount' => 'integer',
+        'current_cycle' => 'integer',
     ];
 
     /**
@@ -88,21 +90,52 @@ class ArisanGroup extends Model
     }
 
     /**
-     * Get users who have already won.
+     * Get users who have already won in the CURRENT cycle.
      */
     public function winners(): array
+    {
+        return $this->draws()
+            ->where('cycle_number', $this->current_cycle)
+            ->pluck('winner_user_id')
+            ->toArray();
+    }
+
+    /**
+     * Get all-time winners (for display purposes).
+     */
+    public function allTimeWinners(): array
     {
         return $this->draws()->pluck('winner_user_id')->toArray();
     }
 
     /**
-     * Check if the arisan is complete (all members have won).
+     * Check if the current cycle is complete (all current members have won in this cycle).
      */
     public function isComplete(): bool
     {
         $memberCount = $this->members()->count();
-        $winnerCount = $this->draws()->count();
-        return $memberCount > 0 && $memberCount === $winnerCount;
+        $currentCycleWinnerCount = $this->draws()
+            ->where('cycle_number', $this->current_cycle)
+            ->count();
+        return $memberCount > 0 && $memberCount === $currentCycleWinnerCount;
+    }
+
+    /**
+     * Start a new cycle (reset winners for a fresh round).
+     */
+    public function startNewCycle(): void
+    {
+        $this->increment('current_cycle');
+    }
+
+    /**
+     * Get the number of winners in the current cycle.
+     */
+    public function currentCycleWinnerCount(): int
+    {
+        return $this->draws()
+            ->where('cycle_number', $this->current_cycle)
+            ->count();
     }
 
     /**

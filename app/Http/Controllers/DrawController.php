@@ -43,6 +43,12 @@ class DrawController extends Controller
             ], 422);
         }
 
+        // If current cycle is complete, start a new cycle
+        if ($group->isComplete()) {
+            $group->startNewCycle();
+            $group->refresh();
+        }
+
         // Get the next period number
         $lastPeriod = $group->periods()->orderBy('period_number', 'desc')->first();
         $nextPeriodNumber = $lastPeriod ? $lastPeriod->period_number + 1 : 1;
@@ -59,9 +65,10 @@ class DrawController extends Controller
             'status' => 'active',
         ]);
 
+        $cycleMessage = $group->current_cycle > 1 ? ' (Siklus ' . $group->current_cycle . ')' : '';
         return response()->json([
             'success' => true,
-            'message' => 'Periode arisan berhasil dimulai.',
+            'message' => 'Periode arisan berhasil dimulai.' . $cycleMessage,
             'data' => new PeriodResource($period),
         ], 201);
     }
@@ -125,20 +132,22 @@ class DrawController extends Controller
             // Calculate total pot
             $totalPot = $group->contribution_amount * $group->members()->count();
 
-            // Create draw record
+            // Create draw record with cycle number
             $draw = DrawHistory::create([
                 'group_id' => $group->id,
                 'period_id' => $activePeriod->id,
                 'winner_user_id' => $winner->id,
                 'draw_date' => now(),
                 'total_pot_amount' => $totalPot,
+                'cycle_number' => $group->current_cycle,
             ]);
 
             // Complete the current period
             $activePeriod->update(['status' => 'completed']);
 
-            // Check if arisan is complete
-            $isComplete = $group->members()->count() === ($group->draws()->count() + 1);
+            // Check if current cycle is complete
+            $group->refresh();
+            $isComplete = $group->isComplete();
 
             DB::commit();
 

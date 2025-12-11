@@ -208,6 +208,8 @@ class ArisanWebController extends Controller
                 ],
                 'is_creator' => $group->creator_user_id === $user->id,
                 'is_complete' => $group->isComplete(),
+                'current_cycle' => $group->current_cycle,
+                'current_cycle_winners' => $group->currentCycleWinnerCount(),
                 'member_count' => $group->members->count(),
                 'members' => $group->members->map(fn($m) => [
                     'id' => $m->id,
@@ -227,6 +229,7 @@ class ArisanWebController extends Controller
                     'id' => $d->id,
                     'period_id' => $d->period_id,
                     'period_number' => $d->period?->period_number,
+                    'cycle_number' => $d->cycle_number,
                     'winner' => [
                         'id' => $d->winner->id,
                         'name' => $d->winner->name,
@@ -332,6 +335,12 @@ class ArisanWebController extends Controller
             return back()->withErrors(['error' => 'Minimal 2 anggota diperlukan.']);
         }
 
+        // If current cycle is complete, start a new cycle
+        if ($group->isComplete()) {
+            $group->startNewCycle();
+            $group->refresh();
+        }
+
         $lastPeriod = $group->periods()->orderBy('period_number', 'desc')->first();
         $nextPeriodNumber = $lastPeriod ? $lastPeriod->period_number + 1 : 1;
 
@@ -343,7 +352,8 @@ class ArisanWebController extends Controller
             'status' => 'active',
         ]);
 
-        return back()->with('success', 'Periode arisan berhasil dimulai!');
+        $cycleMessage = $group->current_cycle > 1 ? ' (Siklus ' . $group->current_cycle . ')' : '';
+        return back()->with('success', 'Periode arisan berhasil dimulai!' . $cycleMessage);
     }
 
     /**
@@ -475,12 +485,14 @@ class ArisanWebController extends Controller
                 'winner_user_id' => $winner->id,
                 'draw_date' => now(),
                 'total_pot_amount' => $totalPot,
+                'cycle_number' => $group->current_cycle,
             ]);
 
             $activePeriod->update(['status' => 'completed']);
 
-            // Check if arisan is complete
-            $isComplete = $group->members()->count() === ($group->draws()->count() + 1);
+            // Check if current cycle is complete (all members have won in this cycle)
+            $group->refresh();
+            $isComplete = $group->isComplete();
 
             DB::commit();
 
@@ -488,7 +500,7 @@ class ArisanWebController extends Controller
             if (!$isComplete) {
                 $message .= '. Mulai periode baru untuk melanjutkan arisan.';
             } else {
-                $message .= '. Arisan telah selesai!';
+                $message .= '. Siklus arisan telah selesai! Tambah member baru atau mulai siklus baru.';
             }
 
             return back()->with('success', $message);
